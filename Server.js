@@ -20,6 +20,8 @@ io.on("connection", (socket) => {
 			lat: userData.lat,
 			lng: userData.lng
         });
+		
+		console.log(JSON.stringify(users));
 
         if(users.length==2){
 			 io.to(users[0].id).emit('onConnectionSucceed', users[1]);
@@ -45,11 +47,23 @@ io.on("connection", (socket) => {
 			bearing: data.locationBearing,
         });
     });
+	
+	socket.on('remove_marker', (data) => {
+        socket.broadcast.to(data.socketId).emit('remove_marker', {
+			id: socket.id
+        });
+    });
 
     socket.emit("welcome", "User connected");
 
     socket.on("disconnect", () => {
-        console.log("disconnected")
+		users.splice(users.findIndex(elem => elem.id === socket.id), 1);
+        console.log("disconnected");
+	    if(users.length==1){
+			socket.broadcast.to(users[0].id).emit('remove_marker', {
+			id: socket.id
+        });
+		}
     });
 
     // listen for incoming data msg on this newly connected socket
